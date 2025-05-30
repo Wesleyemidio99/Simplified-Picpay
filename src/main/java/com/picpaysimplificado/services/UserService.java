@@ -2,6 +2,8 @@ package com.picpaysimplificado.services;
 
 import com.picpaysimplificado.domain.user.User;
 import com.picpaysimplificado.domain.user.UserType;
+import com.picpaysimplificado.dtos.UserDto;
+import com.picpaysimplificado.mapper.UserMapper;
 import com.picpaysimplificado.repositories.UserRepository;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -13,6 +15,7 @@ import java.math.BigDecimal;
 public class UserService {
 
     private final UserRepository userRepository;
+    private final UserMapper userMapper;
 
     public void validateTransactions(User sender, BigDecimal amount) throws Exception {
         if (sender.getUserType() == UserType.MERCHANT){
@@ -30,5 +33,10 @@ public class UserService {
 
     public void save(User user) {
         userRepository.save(user);
+    }
+
+    public User createUser(UserDto user) throws Exception {
+            return userRepository.save(userMapper.toEntity(user));
+        }
     }
 }
