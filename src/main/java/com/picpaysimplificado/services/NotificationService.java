@@ -22,11 +22,12 @@ public class NotificationService {
 
         NotificationDto notificationRequest = new NotificationDto(email, messsage);
 
-        ResponseEntity<String> notificationResponse = restTemplate.postForEntity("https://util.devi.tools/api/v1/notify", notificationRequest, String.class);
-
-        if(!(notificationResponse.getStatusCode() == HttpStatus.OK)) {
-            log.info("Erro ao enviar notificação para o usuário: {}", user.getId());
-            throw new Exception("Service de notificação indisponível.");
-        }
+//        ResponseEntity<String> notificationResponse = restTemplate.postForEntity("https://util.devi.tools/api/v1/notify", notificationRequest, String.class);
+//
+//        if(!(notificationResponse.getStatusCode() == HttpStatus.OK)) {
+//            log.info("Erro ao enviar notificação para o usuário: {}", user.getId());
+//            throw new Exception("Service de notificação indisponível.");
+//        }
+        System.out.println("Enviando notificação para o usuário: " + user.getId() + " com a mensagem: " + messsage);
     }
 }

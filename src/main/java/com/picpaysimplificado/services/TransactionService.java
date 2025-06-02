@@ -3,6 +3,7 @@ package com.picpaysimplificado.services;
 import com.picpaysimplificado.domain.transaction.Transaction;
 import com.picpaysimplificado.domain.user.User;
 import com.picpaysimplificado.dtos.TransactionDto;
+import com.picpaysimplificado.exception.ModifiedExceptions;
 import com.picpaysimplificado.repositories.TransactioRepository;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -23,7 +24,9 @@ public class TransactionService {
 
     private final RestTemplate restTemplate;
 
-    public void createTransaction(TransactionDto transactionDTO) throws Exception {
+    private final NotificationService notificationService;
+
+    public Transaction createTransaction(TransactionDto transactionDTO) throws java.lang.Exception {
         User sender = userService.findById(transactionDTO.getSenderId());
         User receiver = userService.findById(transactionDTO.getReceiverId());
 
@@ -47,15 +50,18 @@ public class TransactionService {
         userService.save(sender);
         userService.save(receiver);
 
+        notificationService.sendNotification(receiver, "Você recebeu uma transação no valor de " + transactionDTO.getValue() + " de " + sender.getFirstName());
+        notificationService.sendNotification(sender, "Você enviou uma transação no valor de " + transactionDTO.getValue() + " para " + receiver.getFirstName());
 
+        return transaction;
     }
 
     public boolean authorizeTransaction(User sender, BigDecimal value) {
         ResponseEntity<Map> authorizeResponse = restTemplate.getForEntity("https://util.devi.tools/api/v2/authorize", Map.class);
 
         if (authorizeResponse.getStatusCode() == HttpStatus.OK) {
-            String authorizationCode = (String) authorizeResponse.getBody().get("authorization");
-            return "true".equalsIgnoreCase(authorizationCode);
+            String authorizationCode = authorizeResponse.getBody().get("status").toString();
+            return "success".equalsIgnoreCase(authorizationCode);
         } else return false;
     }
 }
