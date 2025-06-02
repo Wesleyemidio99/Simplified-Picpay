@@ -1,5 +1,6 @@
 package com.picpaysimplificado.dtos;
 
+import com.picpaysimplificado.domain.user.UserType;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -14,4 +15,5 @@ public class UserDto {
     private BigDecimal balance;
     private String email;
     private String password;
+    private UserType userType;
 }
