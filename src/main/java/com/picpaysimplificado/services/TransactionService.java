@@ -3,8 +3,8 @@ package com.picpaysimplificado.services;
 import com.picpaysimplificado.domain.transaction.Transaction;
 import com.picpaysimplificado.domain.user.User;
 import com.picpaysimplificado.dtos.TransactionDto;
-import com.picpaysimplificado.exception.ModifiedExceptions;
 import com.picpaysimplificado.repositories.TransactioRepository;
+import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -37,18 +37,7 @@ public class TransactionService {
             throw new Exception("Transação não autorizada.");
         }
 
-        Transaction transaction = new Transaction();
-        transaction.setAmount(transactionDTO.getValue());
-        transaction.setSender(sender);
-        transaction.setReceiver(receiver);
-        transaction.setTimestamp(java.time.LocalDate.now());
-
-        sender.setBalance(sender.getBalance().subtract(transactionDTO.getValue()));
-        receiver.setBalance(receiver.getBalance().add(transactionDTO.getValue()));
-
-        transactioRepository.save(transaction);
-        userService.save(sender);
-        userService.save(receiver);
+        Transaction transaction = createAndPersistTransaction(transactionDTO, sender, receiver);
 
         notificationService.sendNotification(receiver, "Você recebeu uma transação no valor de " + transactionDTO.getValue() + " de " + sender.getFirstName());
         notificationService.sendNotification(sender, "Você enviou uma transação no valor de " + transactionDTO.getValue() + " para " + receiver.getFirstName());
@@ -63,5 +52,23 @@ public class TransactionService {
             String authorizationCode = authorizeResponse.getBody().get("status").toString();
             return "success".equalsIgnoreCase(authorizationCode);
         } else return false;
+    }
+
+    @Transactional
+    public Transaction createAndPersistTransaction(TransactionDto transactionDTO, User sender, User receiver) {
+        Transaction transaction = new Transaction();
+
+        transaction.setAmount(transactionDTO.getValue());
+        transaction.setSender(sender);
+        transaction.setReceiver(receiver);
+        transaction.setTimestamp(java.time.LocalDate.now());
+        sender.setBalance(sender.getBalance().subtract(transactionDTO.getValue()));
+        receiver.setBalance(receiver.getBalance().add(transactionDTO.getValue()));
+
+        transactioRepository.save(transaction);
+        userService.save(sender);
+        userService.save(receiver);
+
+        return transaction;
     }
 }
